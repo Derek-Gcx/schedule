@@ -13,6 +13,8 @@ void panic(int i, char* warning) {
     exit(i);
 }
 
+static int lopt;
+
 
 /*=============================== parse_arg ===============================*/
 void parse_arg(int argc, char* argv[], argInfo* arg) {
@@ -29,7 +31,7 @@ void parse_arg(int argc, char* argv[], argInfo* arg) {
     arg->user = pwd->pw_name;
 
     int opt = 0;
-    int lopt;
+    // int lopt;
     int loptind = 0;
     int temp = 0;
     char pattern[] = "-n:d:u:L:";
@@ -38,7 +40,7 @@ void parse_arg(int argc, char* argv[], argInfo* arg) {
         {"dest", required_argument, NULL, 'd'}, 
         {"user", required_argument, NULL, 'u'}, 
         {"latency", required_argument, NULL, 'L'},
-        {"help", no_argument, NULL, 1}, 
+        {"help", no_argument, &lopt, 1}, 
         {0, 0, 0, 0}
     };
 
@@ -94,14 +96,17 @@ void parse_arg(int argc, char* argv[], argInfo* arg) {
 
 /*=============================== functions ===============================*/
 void usage() {
-    // printf("Usage: schedule [OPTION] ... [FUNC] ... [EXPR] ...\n");
-    // printf("Execute and manage tasks.\n\n");
-    // printf("help:\n\tusage and instructions.\n");
-    // printf("all:\n\tdisplay all tasks.\n");
-    // printf("kill: [NAME]\n\tterminate a task specified by name.\n");
-    // printf("run: [OPTIONS]...[EXPR][EXPR]...\n\t-n, --name")
-
-;
+    printf("Usage: schedule [OPTION] ... [FUNC] ... [EXPR] ...\n");
+    printf("Execute and manage tasks.\n\n");
+    printf("help:\n\tusage and instructions.\n");
+    printf("all:\n\tdisplay all tasks.\n");
+    printf("kill: [NAME]\n\tterminate a task specified by name.\n");
+    printf("run: [OPTIONS]...[EXPR][EXPR]...\n");
+    printf("\t%s, %-20s specify name of the task, default to the action followed\n", "-n", "--name");
+    printf("\t%s, %-20s specify the user/owner of the tast, default to current user\n", "-u", "--user");
+    printf("\t%s, %-20s place the ouput into <file>\n", "-d", "--dest <file>");
+    printf("\t%s, %-20s begin task after latency\n", "-L", "--latency");
+    printf("\t%-24s info\n", "--help");
 
 }
 
