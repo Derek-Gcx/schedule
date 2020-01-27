@@ -8,6 +8,10 @@ extern void show(argInfo*);
 #endif
 
 extern void usage(void);
+extern void execute(argInfo*);
+extern void save_info(argInfo*, pid_t);
+extern void delete_info(argInfo*, pid_t);
+
 void panic(int i, char* warning) {
     printf("%s\n", warning);
     exit(i);
@@ -18,7 +22,7 @@ static int lopt;
 
 /*=============================== parse_arg ===============================*/
 void parse_arg(int argc, char* argv[], argInfo* arg) {
-
+    arg->name = NULL;
     arg->prog_name = argv[0];
     arg->dest = NULL;
     arg->latency = 0;
@@ -123,7 +127,18 @@ void kill(argInfo* arg) {
 }
 
 void run(argInfo* arg) {
-    ;
+    assert(arg->name && arg->func);
+
+    pid_t fpid = fork();
+    if (fpid<0) {
+        panic(2, "fork error!\n");
+    }
+    else if (fpid==0) {
+        execute(arg);
+    }
+    else {
+        ;
+    }
 }
 
 struct funcTable {
@@ -138,6 +153,86 @@ struct funcTable {
 };
 
 
+/* ============================== utils ==============================*/
+void execute(argInfo* arg) {
+    /* latency */
+    if (arg->latency) {
+        printf("%s: task will begin after %d seconds.\n", arg->prog_name, arg->latency);
+        sleep((unsigned) arg->latency);
+    }
+
+    /* output stream */
+    FILE* fp = NULL;
+    if (arg->dest) {
+        fp = fopen(arg->dest, "a");
+        if (fp==NULL) panic(3, "empty dest file pointer!\n");
+    }
+    else
+        fp = stdout;
+
+    /* execute */
+    printf("%s: task begins.\n", arg->prog_name);
+    for (int index=0; index<MAXSIZE; index++) {
+        if (arg->expr[index]==NULL) break;
+
+        FILE* output_stream = popen(arg->expr[index], "r");
+
+
+        if (output_stream==NULL)
+            panic(4, "execution failed!\n");
+        
+        char buf[BUF];
+        fprintf(fp, "\n/*================ command 1 ================*/\n");
+        while (!feof(output_stream)) {
+            fread(buf, BUF, 1, output_stream);
+            fprintf(fp, "%s", buf);
+            fflush(fp);
+        }
+
+        pclose(output_stream);
+        break;
+    }
+
+    fflush(fp);
+    fclose(fp);
+    printf("%s: task completed.\n", arg->prog_name);
+}
+
+void save_info(argInfo* arg, pid_t pid) {
+    /* initialize task info */
+    taskInfo task;
+    task.name = arg->name;
+    task.user = arg->user;
+    task.pid = pid;
+
+    /* open file */
+    FILE* pool = fopen("/tmp/schedule_pool", "a");
+    fprintf(pool, "%s %d %s\n", task.name, task.pid, task.user);
+    fflush(pool);
+    fclose(pool);
+}
+
+void delete_info(argInfo* arg, pid_t pid) {
+    char buf1[64];
+    int id;
+    char buf2[64];
+
+    /* open file */
+    FILE* pool = fopen("/tmp/schedule_pool", "r");
+    FILE* pool_backup = fopen("/tmp/.schedule_pool", "w");
+
+    while (!feof(pool)) {
+        fscanf(pool, "%s %d %s", buf1, &id, buf2);
+        if (id==pid) continue;
+
+        fprintf(pool_backup, "%s %d %s\n", buf1, id, buf2);
+    }
+
+    system("rm /tmp/schedule_pool");
+    system("mv /tmp/.schedule_pool /tmp/schedule_pool");
+}
+
+
 /*=============================== main ===============================*/
 int main(int argc, char* argv[]) {
     argInfo arg;
@@ -147,6 +242,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef DEBUG
     show(&arg);
+    run(&arg);
 #endif
 
 

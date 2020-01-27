@@ -11,6 +11,10 @@
 #define MAXSIZE 10
 #define BUF 4096
 
+typedef struct argInfo argInfo;
+typedef struct taskInfo taskInfo;
+typedef __pid_t pid_t;
+
 struct argInfo {
     char* name;
     char* prog_name;
@@ -24,7 +28,5 @@ struct argInfo {
 struct taskInfo {
     char* name;
     char* user;
+    pid_t pid;
 };
-
-typedef struct argInfo argInfo;
-typedef struct taskInfo taskInfo;
