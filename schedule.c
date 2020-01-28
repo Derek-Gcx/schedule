@@ -117,6 +117,7 @@ void usage() {
     printf("\t%s, %-20s specify the user/owner of the tast, default to current user\n", "-u", "--user");
     printf("\t%s, %-20s place the ouput into <file>\n", "-d", "--dest <file>");
     printf("\t%s, %-20s begin task after latency\n", "-L", "--latency");
+    printf("\t%s, %-20s run the task backstage\n", "-b", "--back");
     printf("\t%-24s info\n", "--help");
 
 }
@@ -127,12 +128,13 @@ void help(argInfo* arg) {
 
 void all(argInfo* arg) {
     assert(strcmp(arg->func, "all")==0);
-    FILE* pool = fopen("/tmp/schedule_pool", "r");
     char buf1[BUF];
     char buf2[BUF];
     int pid;
 
     printf("%-20s%-20s%-20s\n", "Name", "user", "pid");
+    FILE* pool = fopen("/tmp/schedule_pool", "r");
+    if (pool==NULL) exit(0);
     while (!feof(pool)) {
         fscanf(pool, "%s %d %s\n", buf1, &pid, buf2);
         printf("%-20s%-20d%-20s\n", buf1, pid, buf2);
