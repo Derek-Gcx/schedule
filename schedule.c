@@ -212,7 +212,7 @@ void execute(argInfo* arg) {
 
     /* redirection via dup */
     if (arg->dest!=NULL) {
-        int dest_fd = open(arg->dest, O_WRONLY);
+        int dest_fd = open(arg->dest, O_WRONLY|O_CREAT, S_IRWXU);
         dup2(dest_fd, 1);
         close(dest_fd);
     }
@@ -224,6 +224,7 @@ void execute(argInfo* arg) {
 
         // '\n' required! or every subprocess will add this string to printf buffer!
         printf("\n/*=============== task %d: %s ===============*/\n\n", index, arg->expr[index]);
+        fflush(stdout);
         pid_t ffpid = fork();
 
         if (ffpid<0) panic(5, "fork error!\n");
@@ -252,6 +253,7 @@ void execute(argInfo* arg) {
         }
     }
     printf("\n\n%s: task completed.\n", arg->prog_name);
+    fflush(stdout);
 }
 
 void save_info(argInfo* arg, pid_t pid) {
